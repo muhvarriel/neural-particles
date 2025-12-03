@@ -1,0 +1,87 @@
+[
+  {
+    "name": "bug",
+    "color": "d73a4a",
+    "description": "Something is not working"
+  },
+  {
+    "name": "enhancement",
+    "color": "a2eeef",
+    "description": "New feature or request"
+  },
+  {
+    "name": "question",
+    "color": "d876e3",
+    "description": "Further information is requested"
+  },
+  {
+    "name": "documentation",
+    "color": "0075ca",
+    "description": "Improvements or additions to documentation"
+  },
+  {
+    "name": "good first issue",
+    "color": "7057ff",
+    "description": "Good for newcomers"
+  },
+  {
+    "name": "help wanted",
+    "color": "008672",
+    "description": "Extra attention is needed"
+  },
+  {
+    "name": "dependencies",
+    "color": "0366d6",
+    "description": "Pull requests that update a dependency file"
+  },
+  {
+    "name": "automated",
+    "color": "ededed",
+    "description": "Automated pull requests"
+  },
+  {
+    "name": "ci",
+    "color": "2ea44f",
+    "description": "Continuous integration related"
+  },
+  {
+    "name": "security",
+    "color": "ee0701",
+    "description": "Security related issues"
+  },
+  {
+    "name": "performance",
+    "color": "fbca04",
+    "description": "Performance improvements"
+  },
+  {
+    "name": "accessibility",
+    "color": "c5def5",
+    "description": "Accessibility improvements"
+  },
+  {
+    "name": "ui/ux",
+    "color": "e99695",
+    "description": "User interface and experience"
+  },
+  {
+    "name": "breaking change",
+    "color": "b60205",
+    "description": "Breaking changes to API or behavior"
+  },
+  {
+    "name": "wontfix",
+    "color": "ffffff",
+    "description": "This will not be worked on"
+  },
+  {
+    "name": "duplicate",
+    "color": "cfd3d7",
+    "description": "This issue or pull request already exists"
+  },
+  {
+    "name": "invalid",
+    "color": "e4e669",
+    "description": "This does not seem right"
+  }
+]
