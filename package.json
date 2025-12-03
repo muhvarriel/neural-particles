@@ -1,7 +1,30 @@
 {
   "name": "neural-particles",
   "version": "0.1.0",
+  "description": "Interactive 3D particle system controlled by hand gestures using MediaPipe and Three.js",
   "private": true,
+  "keywords": [
+    "threejs",
+    "mediapipe",
+    "hand-tracking",
+    "particle-system",
+    "webgl",
+    "nextjs",
+    "react-three-fiber",
+    "computer-vision",
+    "gesture-control",
+    "typescript"
+  ],
+  "author": "muhvarriel",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/muhvarriel/neural-particles.git"
+  },
+  "bugs": {
+    "url": "https://github.com/muhvarriel/neural-particles/issues"
+  },
+  "homepage": "https://github.com/muhvarriel/neural-particles#readme",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

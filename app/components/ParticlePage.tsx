@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  useMemo,
-  Suspense,
-  JSX,
-} from "react";
+import { useEffect, useRef, useState, useMemo, Suspense, JSX } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Text } from "@react-three/drei";
@@ -376,7 +369,7 @@ const HandController = ({
             const index = landmarks[8];
             const dist = Math.sqrt(
               (thumb.x - index.x) * (thumb.x - index.x) +
-              (thumb.y - index.y) * (thumb.y - index.y),
+                (thumb.y - index.y) * (thumb.y - index.y),
             );
 
             let dNorm = (dist - 0.02) * 7;
@@ -473,11 +466,11 @@ const UI = ({
     label: string;
     icon: JSX.Element;
   }> = [
-      { id: "heart", label: "Heart", icon: <Heart size={18} /> },
-      { id: "sphere", label: "Sphere", icon: <Globe size={18} /> },
-      { id: "flower", label: "Flower", icon: <Flower2 size={18} /> },
-      { id: "spiral", label: "Spiral", icon: <Command size={18} /> },
-    ];
+    { id: "heart", label: "Heart", icon: <Heart size={18} /> },
+    { id: "sphere", label: "Sphere", icon: <Globe size={18} /> },
+    { id: "flower", label: "Flower", icon: <Flower2 size={18} /> },
+    { id: "spiral", label: "Spiral", icon: <Command size={18} /> },
+  ];
 
   return (
     <>
