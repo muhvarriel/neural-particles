@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/muhvarriel/neural-particles/discussions
+    about: For general questions, ideas, and community discussions
+  - name: Security Issue
+    url: https://github.com/muhvarriel/neural-particles/security/advisories/new
+    about: Report security vulnerabilities privately
