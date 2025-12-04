@@ -1,24 +1,33 @@
 # Gesture Controls Guide
 
-Visual guide for hand gestures used in Neural Particles.
+Technical and visual guide for hand gestures used in Neural Particles.
+
+## Table of Contents
+
+- [Supported Gestures](#supported-gestures)
+- [Hand Detection Requirements](#hand-detection-requirements)
+- [Gesture Recognition Details](#gesture-recognition-details)
+- [Troubleshooting](#troubleshooting)
+- [Keyboard and Mouse Alternatives](#keyboard-and-mouse-alternatives)
 
 ## Supported Gestures
 
 ### 1. Pinch Gesture
 
-**Action**: Compress particles together
+**Action**: Compress or expand the particle system
 
-**How to perform**:
+#### How to perform
 
-1. Show your hand to the camera (palm facing camera)
-2. Bring your thumb and index finger close together
-3. The closer they are, the more compressed the particles become
+1. Show your hand to the camera with the palm facing the camera
+2. Slowly bring your thumb and index finger closer together
+3. Hold the pinch at the desired distance
 
-**Visual indicator**: Particles contract toward the center
+#### Visual indicator
+
+Particles move closer to the center as the pinch becomes tighter.
 
 ```
-     /\
-    /  \     <- Index Finger
+     /    /  \     <- Index finger
    |    |
    |    |
     \  /      <- Thumb
@@ -26,11 +35,13 @@ Visual guide for hand gestures used in Neural Particles.
    [PINCH]
 ```
 
-**Effect**:
+#### Effect on particles
 
-- Pinch distance 0.0-0.2: Maximum compression
-- Pinch distance 0.2-0.8: Normal state
-- Pinch distance 0.8-1.0: Expanding
+- Pinch distance in range `0.0 - 0.2`: Maximum compression
+- Pinch distance in range `0.2 - 0.8`: Normal state
+- Pinch distance in range `0.8 - 1.0+`: Expansion
+
+The pinch distance is a continuous value used as a scaling factor for the particle shapes.
 
 ---
 
@@ -38,13 +49,15 @@ Visual guide for hand gestures used in Neural Particles.
 
 **Action**: Explode particles outward
 
-**How to perform**:
+#### How to perform
 
 1. Show your hand to the camera
-2. Spread all fingers wide apart
-3. Keep hand flat and open
+2. Spread all fingers as wide as possible
+3. Keep your hand flat and fully open
 
-**Visual indicator**: Particles expand dramatically
+#### Visual indicator
+
+Particles expand significantly, creating an explosive effect.
 
 ```
   |  |  |  |  |
@@ -53,10 +66,11 @@ Visual guide for hand gestures used in Neural Particles.
     [  HAND  ]
 ```
 
-**Effect**:
+#### Effect on particles
 
-- Hand fully open: Explosive expansion (1.5x normal size)
-- Creates dramatic visual effect with additive blending
+- Fully open hand triggers stronger expansion multipliers
+- Combines with pinch logic for gradual control
+- Works best when hand is centered in camera view
 
 ---
 
@@ -64,13 +78,15 @@ Visual guide for hand gestures used in Neural Particles.
 
 **Action**: Switch between particle shapes
 
-**How to perform**:
+#### How to perform
 
 1. Show your hand to the camera
-2. Move hand quickly from left to right (or right to left)
-3. Movement must exceed threshold distance
+2. Move your hand quickly from left to right or right to left
+3. Make sure the movement is clear and crosses a visible distance
 
-**Visual indicator**: Shape morphs to next/previous formation
+#### Visual indicator
+
+Active shape morphs into the next or previous formation.
 
 ```
     <----  Swipe Left   (Previous shape)
@@ -78,29 +94,37 @@ Visual guide for hand gestures used in Neural Particles.
     ---->  Swipe Right  (Next shape)
 ```
 
-**Shape cycle**:
+#### Shape cycle order
 
 1. Heart
 2. Sphere
 3. Flower
 4. Spiral
-   (repeats)
+5. Back to Heart
 
-**Cooldown**: 800ms between swipes to prevent accidental triggers
+#### Swipe parameters
+
+- Movement threshold: Approximately 6 percent of screen width
+- Cooldown: 800 milliseconds between consecutive swipes
+- Direction: Based on change in wrist `x` coordinate
+
+The cooldown prevents accidental multiple shape changes from a single motion.
 
 ---
 
 ### 4. Hand Position (X-axis)
 
-**Action**: Change particle colors
+**Action**: Control global color palette
 
-**How to perform**:
+#### How to perform
 
-1. Show your hand to the camera
-2. Move hand left and right
-3. Color hue changes based on horizontal position
+1. Keep your hand visible to the camera
+2. Move your hand horizontally from left to right
+3. Observe the color change as your hand moves
 
-**Visual indicator**: Particles shift through color spectrum
+#### Visual indicator
+
+Particle colors shift smoothly through the hue spectrum.
 
 ```
 Left Side         Center         Right Side
@@ -110,11 +134,13 @@ Left Side         Center         Right Side
    [============================]
 ```
 
-**Effect**:
+#### Effect on colors
 
-- Left side: Cool colors (blue, cyan)
-- Center: Balanced colors (green, cyan)
-- Right side: Warm colors (yellow, magenta)
+- Hand on left side: Cooler colors (blue, cyan)
+- Hand near center: Neutral colors (green, teal)
+- Hand on right side: Warmer colors (yellow, magenta, red)
+
+The horizontal hand position `handX` is normalized between `0.0` and `1.0` and mapped directly to color hue.
 
 ---
 
@@ -122,43 +148,45 @@ Left Side         Center         Right Side
 
 ### Camera Setup
 
-- Resolution: 640x480px minimum
-- Frame rate: 30 FPS
-- Lighting: Moderate to bright (avoid backlighting)
-- Distance: 30-60cm from camera
+To achieve consistent hand tracking, the camera configuration should meet these requirements:
+
+- Resolution: At least 640 x 480 pixels
+- Frame rate: 30 frames per second or higher
+- Lighting: Moderate to bright, avoid strong backlighting
+- Distance: Hand approximately 30 to 60 centimeters from the camera
+- Device: Built-in webcam or external USB camera
 
 ### Hand Positioning
 
-- Palm facing camera
-- Hand clearly visible (not partially obscured)
-- Avoid extreme angles
-- Keep hand within camera frame
+- Palm facing the camera directly
+- Entire hand should be visible within the frame
+- Avoid extreme rotations or angles
+- Keep background relatively clean and non-reflective
+- Remove objects that may occlude the hand
 
 ### Best Practices
 
-**DO**:
+**Recommended**
 
-- Use good lighting conditions
-- Keep background simple and contrasting
-- Position hand at comfortable distance
-- Make deliberate gestures
-- Wait for "HAND TRACKED" status indicator
+- Use even front lighting (for example, a monitor or desk lamp)
+- Sit at a distance where your arm can move comfortably
+- Make deliberate, clear gestures rather than subtle ones
+- Wait for the "HAND TRACKED" status indicator before performing gestures
 
-**DON'T**:
+**Not recommended**
 
-- Move too quickly (except for swipes)
-- Partially hide hand
-- Use in very dark environments
-- Position hand too close or too far
-- Wear gloves or hand accessories that obscure fingers
+- Using the app in very dark environments
+- Standing too close or too far from the camera
+- Wearing gloves or accessories that cover fingers
+- Moving the hand extremely fast in random directions
 
 ---
 
-## Technical Details
+## Gesture Recognition Details
 
 ### MediaPipe Hand Landmarks
 
-The system tracks 21 hand landmarks:
+The system uses 21 landmarks provided by MediaPipe Hands.
 
 ```
         8   12  16  20    <- Finger tips
@@ -182,34 +210,77 @@ The system tracks 21 hand landmarks:
             0  <- Wrist
 ```
 
-**Key landmarks used**:
+### Key Landmarks Used
 
-- Landmark 0: Wrist (position tracking)
-- Landmark 4: Thumb tip (pinch detection)
-- Landmark 8: Index finger tip (pinch detection)
+- Landmark 0 (wrist): Position tracking and swipe detection
+- Landmark 4 (thumb tip): Pinch calculation
+- Landmark 8 (index finger tip): Pinch calculation
 
-### Gesture Recognition Parameters
+### Pinch Distance Calculation
 
-**Pinch Distance Calculation**:
+Pinch distance is calculated using the Euclidean distance between thumb and index landmarks.
 
 ```typescript
 const distance = Math.sqrt((thumb.x - index.x) ** 2 + (thumb.y - index.y) ** 2);
+
 const normalized = (distance - 0.02) * 7;
 const pinchDistance = Math.max(0, Math.min(1.5, normalized));
 ```
 
-**Swipe Detection**:
+This value is written to the shared state as `sharedState.pinchDistance` and consumed by the particle system.
 
-- Threshold: 0.06 (6% of screen width)
-- Cooldown: 800ms
-- Direction: Based on deltaX (current - previous)
+### Swipe Detection
 
-**Color Mapping**:
+Swipe detection uses changes in wrist `x` coordinate between frames.
+
+```typescript
+const currentX = 1 - wrist.x; // Invert for natural movement
+const deltaX = currentX - lastXRef.current;
+const now = performance.now();
+const timeSinceLastSwipe = now - lastSwipeTimeRef.current;
+
+if (timeSinceLastSwipe > SWIPE_COOLDOWN_MS) {
+  if (deltaX > SWIPE_THRESHOLD) {
+    onSwipe("next");
+    lastSwipeTimeRef.current = now;
+  } else if (deltaX < -SWIPE_THRESHOLD) {
+    onSwipe("prev");
+    lastSwipeTimeRef.current = now;
+  }
+}
+```
+
+- `SWIPE_THRESHOLD`: Approximately 0.06 units in normalized coordinates
+- `SWIPE_COOLDOWN_MS`: 800 milliseconds by default
+
+### Color Mapping
+
+Horizontal hand position is mapped to a hue value.
 
 ```typescript
 const hue = handX; // 0.0 to 1.0
 const color = HSL(hue, 0.8, 0.6);
 ```
+
+Where:
+
+- `handX = 0.0` produces deep blue hues
+- `handX = 0.5` produces green and cyan tones
+- `handX = 1.0` produces magenta and red tones
+
+### Shared State Fields
+
+The gesture recognition layer writes into a shared state object:
+
+```typescript
+const sharedState = {
+  handDetected: false,
+  pinchDistance: 1.0,
+  handX: 0.5,
+};
+```
+
+These values are read on every frame in the particle simulation loop to drive animation and color changes.
 
 ---
 
@@ -217,60 +288,98 @@ const color = HSL(hue, 0.8, 0.6);
 
 ### Hand Not Detected
 
-**Possible causes**:
+**Possible causes**
 
 1. Insufficient lighting
 2. Camera blocked or not working
 3. Browser denied camera permission
-4. Hand outside camera view
+4. Hand outside of camera view
+5. Very low frame rate
 
-**Solutions**:
+**Solutions**
 
-- Check camera permissions in browser
-- Improve lighting conditions
-- Ensure hand is visible and in frame
-- Try refreshing the page
+- Check that the camera is working in another application
+- Ensure the browser has permission to use the camera
+- Improve lighting and reduce strong backlight
+- Move your hand slowly into the center of the frame
+- Refresh the page and re-accept camera permissions
 
 ### Gestures Not Responding
 
-**Possible causes**:
+**Possible causes**
 
 1. Hand detection confidence too low
 2. Fingers not clearly separated
-3. Movement too subtle or too fast
-4. Cooldown period active
+3. Movements too subtle or too fast
+4. Swipe cooldown still active
 
-**Solutions**:
+**Solutions**
 
-- Make gestures more deliberate
-- Ensure fingers are clearly visible
-- Wait for previous gesture to complete
-- Check for "HAND TRACKED" status
+- Make gestures more deliberate and clear
+- Ensure fingers are fully visible and not occluded
+- Move hand at a moderate speed
+- Wait at least one second between swipe gestures
+- Check that "HAND TRACKED" is visible before gesturing
 
 ### Color Not Changing
 
-**Possible causes**:
+**Possible causes**
 
-1. Hand position interpolation smoothing
-2. Minimal hand movement
-3. Lighting affecting landmark detection
+1. Minimal horizontal movement
+2. Hand position smoothing
+3. Landmarks unstable due to low light
 
-**Solutions**:
+**Solutions**
 
-- Move hand more significantly left/right
-- Ensure hand is parallel to camera
-- Improve lighting contrast
+- Move hand further left and right
+- Keep hand parallel to the camera plane
+- Improve lighting and contrast with the background
+
+### Performance Issues During Gestures
+
+**Possible causes**
+
+1. Low-power device or integrated GPU
+2. High particle count on mobile
+3. Heavy background applications
+
+**Solutions**
+
+- Close other applications consuming CPU or GPU
+- Use the app on a desktop or laptop with a dedicated GPU
+- Reduce browser zoom level
+- Test in a Chromium-based browser for better WebGL performance
 
 ---
 
-## Keyboard Alternative
+## Keyboard and Mouse Alternatives
 
-For accessibility or when camera is unavailable:
+For accessibility or when a camera is unavailable, keyboard and mouse controls are available.
 
-**Manual controls available**:
+### Manual Shape Controls
 
-- Bottom menu buttons: Click to switch shapes
-- Mouse drag: Rotate particle system
-- Manual shape selection bypasses gesture requirements
+- Use the shape buttons in the bottom menu to select a specific shape
+- Click on each shape icon to switch immediately without swiping
+- This bypasses swipe gesture recognition
 
-**Note**: Pinch and expansion effects require hand tracking
+### Mouse and Touch Controls
+
+- Click and drag on the canvas to rotate the particle system
+- On touch devices, drag with a single finger to rotate
+- Scroll wheel (if enabled) can be used for zooming in future versions
+
+### When to Use Alternatives
+
+- Camera is blocked by another application
+- Running in a virtual machine without webcam support
+- Using a device without any camera hardware
+- Gestures are not reliable due to low lighting or camera quality
+
+Manual controls ensure that the experience remains usable even without hand tracking.
+
+---
+
+For additional information about the technical implementation of gestures and state management, refer to:
+
+- [ARCHITECTURE.md](./ARCHITECTURE.md)
+- [README.md](../README.md)
