@@ -16,14 +16,27 @@ import {
 
 // ================== CONFIG & TYPES ==================
 
-const PARTICLE_COUNT = 8000;
-const PARTICLE_SIZE = 0.12;
-const CAM_WIDTH = 640;
-const CAM_HEIGHT = 480;
-
 type ShapeType = "heart" | "sphere" | "flower" | "spiral";
 
-// ---- MediaPipe Types (tanpa any) ----
+interface ResponsiveConfig {
+  particleCount: number;
+  particleSize: number;
+  cameraWidth: number;
+  cameraHeight: number;
+  modelComplexity: 0 | 1;
+  cameraPosition: [number, number, number];
+  cameraFov: number;
+  autoRotate: boolean;
+}
+
+interface WindowSize {
+  width: number;
+  height: number;
+  isMobile: boolean;
+  isTablet: boolean;
+}
+
+// ---- MediaPipe Types ----
 
 interface NormalizedLandmark {
   x: number;
@@ -57,13 +70,86 @@ declare global {
   }
 }
 
-// ---- Shared mutable state (di luar React) ----
+// ---- Shared mutable state ----
 
 const sharedState = {
   handDetected: false,
-  pinchDistance: 1.0, // 0 = closed, 1 = open
-  handX: 0.5, // 0 (kiri) - 1 (kanan)
+  pinchDistance: 1.0,
+  handX: 0.5,
   handY: 0.5,
+};
+
+// ================== RESPONSIVE UTILS ==================
+
+const useWindowSize = (): WindowSize => {
+  const [windowSize, setWindowSize] = useState<WindowSize>({
+    width: typeof window !== "undefined" ? window.innerWidth : 1920,
+    height: typeof window !== "undefined" ? window.innerHeight : 1080,
+    isMobile: typeof window !== "undefined" ? window.innerWidth < 768 : false,
+    isTablet:
+      typeof window !== "undefined"
+        ? window.innerWidth >= 768 && window.innerWidth < 1024
+        : false,
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      setWindowSize({
+        width,
+        height,
+        isMobile: width < 768,
+        isTablet: width >= 768 && width < 1024,
+      });
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize();
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return windowSize;
+};
+
+const getResponsiveConfig = (windowSize: WindowSize): ResponsiveConfig => {
+  if (windowSize.isMobile) {
+    return {
+      particleCount: 4000,
+      particleSize: 0.08,
+      cameraWidth: 480,
+      cameraHeight: 360,
+      modelComplexity: 0,
+      cameraPosition: [0, 0, 30],
+      cameraFov: 75,
+      autoRotate: false,
+    };
+  }
+
+  if (windowSize.isTablet) {
+    return {
+      particleCount: 6000,
+      particleSize: 0.1,
+      cameraWidth: 640,
+      cameraHeight: 480,
+      modelComplexity: 1,
+      cameraPosition: [0, 0, 28],
+      cameraFov: 65,
+      autoRotate: true,
+    };
+  }
+
+  return {
+    particleCount: 8000,
+    particleSize: 0.12,
+    cameraWidth: 640,
+    cameraHeight: 480,
+    modelComplexity: 1,
+    cameraPosition: [0, 0, 25],
+    cameraFov: 60,
+    autoRotate: true,
+  };
 };
 
 // ================== MATH UTILS ==================
@@ -124,24 +210,26 @@ const generatePositions = (type: ShapeType, count: number): Float32Array => {
 // ================== PARTICLE SYSTEM ==================
 
 const Particles = ({ activeShape }: { activeShape: ShapeType }) => {
+  const windowSize = useWindowSize();
+  const config = getResponsiveConfig(windowSize);
+
   const pointsRef = useRef<THREE.Points | null>(null);
   const geometryRef = useRef<THREE.BufferGeometry | null>(null);
 
-  // posisi awal
   const [currentPositions] = useState<Float32Array>(() =>
-    generatePositions("sphere", PARTICLE_COUNT),
+    generatePositions("sphere", config.particleCount),
   );
 
-  // posisi target tergantung bentuk
   const targetPositions = useMemo(
-    () => generatePositions(activeShape, PARTICLE_COUNT),
-    [activeShape],
+    () => generatePositions(activeShape, config.particleCount),
+    [activeShape, config.particleCount],
   );
 
-  // buffer warna
-  const colorArray = useMemo(() => new Float32Array(PARTICLE_COUNT * 3), []);
+  const colorArray = useMemo(
+    () => new Float32Array(config.particleCount * 3),
+    [config.particleCount],
+  );
 
-  // reusable color object (hindari new tiap frame)
   const colorObj = useMemo(() => new THREE.Color(), []);
 
   useFrame((state, delta) => {
@@ -159,10 +247,10 @@ const Particles = ({ activeShape }: { activeShape: ShapeType }) => {
 
     const { pinchDistance, handX, handDetected } = sharedState;
 
-    const lerpSpeed = 4.0 * delta;
+    const lerpSpeed = (windowSize.isMobile ? 3.0 : 4.0) * delta;
     const baseHue = handX;
 
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
+    for (let i = 0; i < config.particleCount; i++) {
       const idx = i * 3;
 
       let tx = targetPositions[idx];
@@ -184,7 +272,7 @@ const Particles = ({ activeShape }: { activeShape: ShapeType }) => {
       positions[idx + 1] += (ty - positions[idx + 1] + noise) * lerpSpeed;
       positions[idx + 2] += (tz - positions[idx + 2] + noise) * lerpSpeed;
 
-      const hueShift = (i / PARTICLE_COUNT) * 0.2;
+      const hueShift = (i / config.particleCount) * 0.2;
 
       if (handDetected) {
         colorObj.setHSL((baseHue + hueShift) % 1, 0.8, 0.6);
@@ -200,7 +288,7 @@ const Particles = ({ activeShape }: { activeShape: ShapeType }) => {
     positionAttr.needsUpdate = true;
     colorAttr.needsUpdate = true;
 
-    pointsRef.current.rotation.y += 0.001;
+    pointsRef.current.rotation.y += windowSize.isMobile ? 0.0005 : 0.001;
   });
 
   return (
@@ -208,21 +296,21 @@ const Particles = ({ activeShape }: { activeShape: ShapeType }) => {
       <bufferGeometry ref={geometryRef}>
         <bufferAttribute
           attach="attributes-position"
-          count={PARTICLE_COUNT}
+          count={config.particleCount}
           array={currentPositions}
           itemSize={3}
           args={[currentPositions, 3]}
         />
         <bufferAttribute
           attach="attributes-color"
-          count={PARTICLE_COUNT}
+          count={config.particleCount}
           array={colorArray}
           itemSize={3}
           args={[colorArray, 3]}
         />
       </bufferGeometry>
       <pointsMaterial
-        size={PARTICLE_SIZE}
+        size={config.particleSize}
         vertexColors
         blending={THREE.AdditiveBlending}
         depthWrite={false}
@@ -233,13 +321,16 @@ const Particles = ({ activeShape }: { activeShape: ShapeType }) => {
   );
 };
 
-// ================== HAND CONTROLLER (MEDIAPIPE) ==================
+// ================== HAND CONTROLLER ==================
 
 const HandController = ({
   onGesture,
 }: {
   onGesture: (direction: "next" | "prev") => void;
 }) => {
+  const windowSize = useWindowSize();
+  const config = getResponsiveConfig(windowSize);
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const requestRef = useRef<number | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -283,8 +374,8 @@ const HandController = ({
 
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: CAM_WIDTH,
-          height: CAM_HEIGHT,
+          width: config.cameraWidth,
+          height: config.cameraHeight,
           facingMode: "user",
         },
         audio: false,
@@ -334,7 +425,7 @@ const HandController = ({
 
         hands.setOptions({
           maxNumHands: 1,
-          modelComplexity: 1,
+          modelComplexity: config.modelComplexity,
           minDetectionConfidence: 0.5,
           minTrackingConfidence: 0.5,
         });
@@ -416,7 +507,7 @@ const HandController = ({
         }, 100);
       }
     };
-  }, [onGesture]);
+  }, [onGesture, config]);
 
   return (
     <>
@@ -424,12 +515,12 @@ const HandController = ({
         <div
           style={{
             position: "absolute",
-            bottom: 20,
-            left: 20,
+            bottom: "clamp(15px, 3vh, 20px)",
+            left: "clamp(15px, 3vw, 20px)",
             color: "#00ffcc",
             fontFamily: "'Outfit', sans-serif",
             zIndex: 5,
-            fontSize: "0.9rem",
+            fontSize: "clamp(0.7rem, 2vw, 0.9rem)",
             letterSpacing: "1px",
           }}
         >
@@ -450,6 +541,7 @@ const UI = ({
   activeShape: ShapeType;
   setShape: (s: ShapeType) => void;
 }) => {
+  const windowSize = useWindowSize();
   const [handStatus, setHandStatus] = useState(false);
 
   useEffect(() => {
@@ -466,10 +558,26 @@ const UI = ({
     label: string;
     icon: JSX.Element;
   }> = [
-    { id: "heart", label: "Heart", icon: <Heart size={18} /> },
-    { id: "sphere", label: "Sphere", icon: <Globe size={18} /> },
-    { id: "flower", label: "Flower", icon: <Flower2 size={18} /> },
-    { id: "spiral", label: "Spiral", icon: <Command size={18} /> },
+    {
+      id: "heart",
+      label: "Heart",
+      icon: <Heart size={windowSize.isMobile ? 16 : 18} />,
+    },
+    {
+      id: "sphere",
+      label: "Sphere",
+      icon: <Globe size={windowSize.isMobile ? 16 : 18} />,
+    },
+    {
+      id: "flower",
+      label: "Flower",
+      icon: <Flower2 size={windowSize.isMobile ? 16 : 18} />,
+    },
+    {
+      id: "spiral",
+      label: "Spiral",
+      icon: <Command size={windowSize.isMobile ? 16 : 18} />,
+    },
   ];
 
   return (
@@ -478,8 +586,8 @@ const UI = ({
       <div
         style={{
           position: "absolute",
-          top: 30,
-          left: 30,
+          top: windowSize.isMobile ? "15px" : "30px",
+          left: windowSize.isMobile ? "15px" : "30px",
           zIndex: 50,
           pointerEvents: "none",
         }}
@@ -488,9 +596,9 @@ const UI = ({
           style={{
             background: "rgba(5, 20, 25, 0.7)",
             backdropFilter: "blur(10px)",
-            borderLeft: "4px solid #00f3ff",
-            padding: "15px 25px",
-            borderRadius: "0 12px 12px 0",
+            borderLeft: `${windowSize.isMobile ? "3px" : "4px"} solid #00f3ff`,
+            padding: windowSize.isMobile ? "10px 15px" : "15px 25px",
+            borderRadius: windowSize.isMobile ? "0 8px 8px 0" : "0 12px 12px 0",
             boxShadow: "0 10px 30px -10px rgba(0, 243, 255, 0.2)",
             display: "flex",
             flexDirection: "column",
@@ -500,7 +608,9 @@ const UI = ({
           <h1
             style={{
               margin: 0,
-              fontSize: "1.8rem",
+              fontSize: windowSize.isMobile
+                ? "clamp(1rem, 5vw, 1.3rem)"
+                : "1.8rem",
               fontWeight: 700,
               letterSpacing: "1px",
               color: "white",
@@ -508,7 +618,8 @@ const UI = ({
               textTransform: "uppercase",
               display: "flex",
               alignItems: "center",
-              gap: "10px",
+              gap: windowSize.isMobile ? "6px" : "10px",
+              flexWrap: windowSize.isMobile ? "wrap" : "nowrap",
             }}
           >
             Neural{" "}
@@ -526,8 +637,10 @@ const UI = ({
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "8px",
-              fontSize: "0.8rem",
+              gap: windowSize.isMobile ? "6px" : "8px",
+              fontSize: windowSize.isMobile
+                ? "clamp(0.65rem, 2vw, 0.75rem)"
+                : "0.8rem",
               fontWeight: 500,
               color: handStatus ? "#00f3ff" : "#ff4d4d",
               fontFamily: "'Outfit', sans-serif",
@@ -535,14 +648,18 @@ const UI = ({
               letterSpacing: "0.5px",
             }}
           >
-            <Activity size={14} />
+            <Activity size={windowSize.isMobile ? 12 : 14} />
             <span>
-              SYSTEM STATUS: {handStatus ? "HAND TRACKED" : "SEARCHING..."}
+              {windowSize.isMobile
+                ? handStatus
+                  ? "TRACKED"
+                  : "SEARCHING..."
+                : `SYSTEM STATUS: ${handStatus ? "HAND TRACKED" : "SEARCHING..."}`}
             </span>
             <span
               style={{
-                width: "8px",
-                height: "8px",
+                width: windowSize.isMobile ? "6px" : "8px",
+                height: windowSize.isMobile ? "6px" : "8px",
                 borderRadius: "50%",
                 background: handStatus ? "#00f3ff" : "#ff4d4d",
                 boxShadow: `0 0 10px ${handStatus ? "#00f3ff" : "#ff4d4d"}`,
@@ -552,79 +669,83 @@ const UI = ({
           </div>
         </div>
 
-        <div
-          style={{
-            marginTop: "20px",
-            background: "rgba(0,0,0,0.6)",
-            backdropFilter: "blur(5px)",
-            padding: "15px",
-            borderRadius: "12px",
-            border: "1px solid rgba(255,255,255,0.1)",
-            color: "#ccc",
-            fontSize: "0.85rem",
-            fontFamily: "'Outfit', sans-serif",
-            maxWidth: "250px",
-            lineHeight: "1.8",
-            fontWeight: 300,
-          }}
-        >
+        {!windowSize.isMobile && (
           <div
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              marginBottom: "8px",
+              marginTop: "20px",
+              background: "rgba(0,0,0,0.6)",
+              backdropFilter: "blur(5px)",
+              padding: "15px",
+              borderRadius: "12px",
+              border: "1px solid rgba(255,255,255,0.1)",
+              color: "#ccc",
+              fontSize: "0.85rem",
+              fontFamily: "'Outfit', sans-serif",
+              maxWidth: "250px",
+              lineHeight: "1.8",
+              fontWeight: 300,
             }}
           >
-            <ScanFace size={18} color="#00f3ff" strokeWidth={1.5} />
-            <span>
-              <b>Pinch</b> to Compress
-            </span>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                marginBottom: "8px",
+              }}
+            >
+              <ScanFace size={18} color="#00f3ff" strokeWidth={1.5} />
+              <span>
+                <b>Pinch</b> to Compress
+              </span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                marginBottom: "8px",
+              }}
+            >
+              <Hand size={18} color="#00f3ff" strokeWidth={1.5} />
+              <span>
+                <b>Open Hand</b> to Explode
+              </span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+              }}
+            >
+              <Activity size={18} color="#00f3ff" strokeWidth={1.5} />
+              <span>
+                <b>Swipe</b> to Switch Shape
+              </span>
+            </div>
           </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              marginBottom: "8px",
-            }}
-          >
-            <Hand size={18} color="#00f3ff" strokeWidth={1.5} />
-            <span>
-              <b>Open Hand</b> to Explode
-            </span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-            }}
-          >
-            <Activity size={18} color="#00f3ff" strokeWidth={1.5} />
-            <span>
-              <b>Swipe</b> to Switch Shape
-            </span>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* BOTTOM CENTER: DOCK MENU */}
       <div
         style={{
           position: "absolute",
-          bottom: 40,
+          bottom: windowSize.isMobile ? "15px" : "40px",
           left: "50%",
           transform: "translateX(-50%)",
           zIndex: 50,
-          display: "flex",
-          gap: "12px",
+          display: windowSize.isMobile ? "grid" : "flex",
+          gridTemplateColumns: windowSize.isMobile ? "1fr 1fr" : undefined,
+          gap: windowSize.isMobile ? "8px" : "12px",
           background: "rgba(15, 15, 15, 0.6)",
           backdropFilter: "blur(16px)",
-          padding: "10px 15px",
-          borderRadius: "24px",
+          padding: windowSize.isMobile ? "8px 12px" : "10px 15px",
+          borderRadius: windowSize.isMobile ? "16px" : "24px",
           border: "1px solid rgba(255, 255, 255, 0.08)",
           boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
+          maxWidth: windowSize.isMobile ? "90vw" : undefined,
         }}
       >
         {menuItems.map((item) => {
@@ -639,15 +760,18 @@ const UI = ({
                   : "transparent",
                 color: isActive ? "#000" : "#fff",
                 border: "none",
-                padding: "12px 24px",
-                borderRadius: "18px",
+                padding: windowSize.isMobile ? "10px 16px" : "12px 24px",
+                borderRadius: windowSize.isMobile ? "12px" : "18px",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
-                gap: "10px",
+                justifyContent: "center",
+                gap: windowSize.isMobile ? "6px" : "10px",
                 fontFamily: "'Outfit', sans-serif",
                 fontWeight: isActive ? 600 : 400,
-                fontSize: "0.95rem",
+                fontSize: windowSize.isMobile
+                  ? "clamp(0.75rem, 3vw, 0.85rem)"
+                  : "0.95rem",
                 transition: "all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)",
                 transform: isActive ? "scale(1.05)" : "scale(1)",
                 boxShadow: isActive
@@ -655,20 +779,21 @@ const UI = ({
                   : "none",
                 position: "relative",
                 overflow: "hidden",
+                minWidth: windowSize.isMobile ? "0" : undefined,
               }}
               onMouseEnter={(e) => {
-                if (!isActive) {
+                if (!isActive && !windowSize.isMobile) {
                   e.currentTarget.style.background = "rgba(255,255,255,0.08)";
                 }
               }}
               onMouseLeave={(e) => {
-                if (!isActive) {
+                if (!isActive && !windowSize.isMobile) {
                   e.currentTarget.style.background = "transparent";
                 }
               }}
             >
               {item.icon}
-              <span>{item.label}</span>
+              {!windowSize.isMobile && <span>{item.label}</span>}
             </button>
           );
         })}
@@ -678,8 +803,15 @@ const UI = ({
       <style jsx global>{`
         @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap");
 
+        * {
+          -webkit-tap-highlight-color: transparent;
+        }
+
         body {
           font-family: "Outfit", sans-serif;
+          overflow: hidden;
+          margin: 0;
+          padding: 0;
         }
 
         @keyframes pulse {
@@ -707,6 +839,9 @@ const UI = ({
 // ================== MAIN PAGE ==================
 
 export default function ParticlePage() {
+  const windowSize = useWindowSize();
+  const config = getResponsiveConfig(windowSize);
+
   const [activeShape, setActiveShape] = useState<ShapeType>("sphere");
 
   const SHAPES: ShapeType[] = ["heart", "sphere", "flower", "spiral"];
@@ -734,11 +869,17 @@ export default function ParticlePage() {
         background: "#050505",
         overflow: "hidden",
         position: "relative",
+        touchAction: "none",
       }}
     >
       <UI activeShape={activeShape} setShape={setActiveShape} />
       <HandController onGesture={handleGesture} />
-      <Canvas camera={{ position: [0, 0, 25], fov: 60 }}>
+      <Canvas
+        camera={{
+          position: config.cameraPosition,
+          fov: config.cameraFov,
+        }}
+      >
         <color attach="background" args={["#050505"]} />
         <fog attach="fog" args={["#050505", 10, 60]} />
         <Suspense fallback={<Text color="white">Loading 3D...</Text>}>
@@ -747,7 +888,7 @@ export default function ParticlePage() {
         <OrbitControls
           enableZoom={false}
           enablePan={false}
-          autoRotate
+          autoRotate={config.autoRotate}
           autoRotateSpeed={0.5}
         />
       </Canvas>

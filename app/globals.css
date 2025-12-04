@@ -15,9 +15,6 @@
     "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* Font Import - Outfit (matching ParticlePage) */
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap");
-
 /* Global Resets */
 *,
 *::before,
