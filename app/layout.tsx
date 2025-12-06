@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 
@@ -10,6 +10,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://github.com/muhvarriel/neural-particles"),
   title: "Neural Particles | Interactive 3D Hand Gesture Control",
   description:
     "Experience an interactive 3D particle system controlled by hand gestures using MediaPipe and Three.js. Real-time hand tracking with dynamic particle formations including heart, sphere, flower, and spiral shapes.",
@@ -30,8 +31,6 @@ export const metadata: Metadata = {
   authors: [{ name: "muhvarriel", url: "https://github.com/muhvarriel" }],
   creator: "muhvarriel",
   publisher: "muhvarriel",
-
-  // OpenGraph metadata for social sharing
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -49,8 +48,6 @@ export const metadata: Metadata = {
       },
     ],
   },
-
-  // Twitter Card metadata
   twitter: {
     card: "summary_large_image",
     title: "Neural Particles | Interactive 3D Hand Gesture Control",
@@ -59,34 +56,14 @@ export const metadata: Metadata = {
     images: ["/og-image.png"],
     creator: "@muhvarriel",
   },
-
-  // Viewport configuration for mobile
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 5,
-    userScalable: true,
-  },
-
-  // Theme color for browser UI
-  themeColor: "#00f3ff",
-
-  // Icons
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
-
-  // Web app manifest
   manifest: "/manifest.json",
-
-  // Additional metadata
   applicationName: "Neural Particles",
   category: "Interactive Art",
-  classification: "Interactive 3D Application",
-
-  // Robots
   robots: {
     index: true,
     follow: true,
@@ -100,6 +77,14 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: "#00f3ff",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -107,17 +92,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={outfit.variable}>
-      <head>
-        {/* Additional meta tags */}
-        <meta name="format-detection" content="telephone=no" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta
-          name="apple-mobile-web-app-status-bar-style"
-          content="black-translucent"
-        />
-        <meta name="apple-mobile-web-app-title" content="Neural Particles" />
-      </head>
       <body className="antialiased">{children}</body>
     </html>
   );
